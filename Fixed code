@@ -1,0 +1,121 @@
+from random import randint
+
+player_char = '@'
+computer_char = '#'
+empty_char = 'O'
+
+board_width = 12
+board_height = 10
+
+player_turn = True
+game_over = False
+
+board = []
+
+def setup_game():
+    global player_turn, game_over, board
+    player_turn = True
+    game_over = False
+    board = []
+    for row in range(board_height):
+        board.append([empty_char] * board_width)
+
+def render():
+    for row in board:
+        print(' '.join(row))
+    print('\n')
+
+def col_full(col):
+    return board[0][col] != empty_char
+
+def board_full():
+    for col in range(board_width):
+        if not col_full(col):
+            return False
+    return True
+
+def player_move():
+    valid = False
+    message = 'Player, choose a column...'
+
+    while not valid:
+        col = input(message)
+        valid = move_valid(col)
+        if not valid:
+            message = 'Player, that choice is not valid. Please choose another column...'
+
+    move(int(col), player_char)
+
+def computer_move():
+    valid = False
+
+    while not valid:
+        col = randint(0, board_width - 1)
+        valid = move_valid(col)
+
+    print('Computer chose column %s' % str(col))
+    move(col, computer_char)
+
+def move(col, char):
+    if not col_full(col):
+        for row in range(len(board) - 1, -1, -1):
+            if board[row][col] == empty_char:
+                board[row][col] = char
+                break
+
+def move_valid(col):
+    try:
+        col = int(col)
+    except ValueError:
+        return False
+
+    if col < 0 or col > board_width - 1:
+        return False
+    elif col_full(col):
+        return False
+    return True
+
+def game_won(char):
+    # Horizontal, vertical, and diagonal checks
+    for col in range(board_width):
+        for row in range(board_height):
+            if board[row][col] == char:
+                # Horizontal line
+                if col + 3 < board_width and all(board[row][col + i] == char for i in range(4)):
+                    return True
+                # Vertical line
+                if row + 3 < board_height and all(board[row + i][col] == char for i in range(4)):
+                    return True
+                # Diagonal down
+                if col + 3 < board_width and row + 3 < board_height and all(board[row + i][col + i] == char for i in range(4)):
+                    return True
+                # Diagonal up
+                if col + 3 < board_width and row - 3 >= 0 and all(board[row - i][col + i] == char for i in range(4)):
+                    return True
+    return False
+
+def is_game_over():
+    if board_full():
+        print("The board is full. It's a draw!")
+        return True
+    if game_won(player_char):
+        print("Player wins!")
+        return True
+    if game_won(computer_char):
+        print("Computer wins!")
+        return True
+    return False
+
+setup_game()
+
+while not game_over:
+    render()
+    if player_turn:
+        player_move()
+    else:
+        computer_move()
+    player_turn = not player_turn
+    game_over = is_game_over()
+
+render()
+print('Game over')
